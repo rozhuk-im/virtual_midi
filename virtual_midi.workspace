@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Workspace Name="virtual_midi" Database="" Version="10000">
+  <Project Name="virtual_midi" Path="src/virtual_midi/virtual_midi.project" Active="Yes"/>
+  <Project Name="virtual_oss_sequencer" Path="src/virtual_oss_sequencer/virtual_oss_sequencer.project" Active="No"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug">
+      <Environment/>
+      <Project Name="virtual_midi" ConfigName="Debug"/>
+      <Project Name="virtual_oss_sequencer" ConfigName="Debug"/>
+      <Project Name="virtual_midi" ConfigName="Debug"/>
+      <Project Name="virtual_oss_sequencer" ConfigName="Debug"/>
+    </WorkspaceConfiguration>
+    <WorkspaceConfiguration Name="Release">
+      <Environment/>
+      <Project Name="virtual_midi" ConfigName="Release"/>
+      <Project Name="virtual_oss_sequencer" ConfigName="Release"/>
+      <Project Name="virtual_midi" ConfigName="Release"/>
+      <Project Name="virtual_oss_sequencer" ConfigName="Release"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CodeLite_Workspace>

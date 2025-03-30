@@ -1,0 +1,30 @@
+#!/bin/sh
+### Rozhuk Ivan 2025
+### startup script file for virtual_oss_sequencer
+###
+
+
+# PROVIDE: virtual_oss_sequencer
+# REQUIRE: DAEMON
+# BEFORE:  LOGIN
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="virtual_oss_sequencer"
+rcvar=virtual_oss_sequencer_enable
+
+load_rc_config $name
+
+: ${virtual_oss_sequencer_enable="NO"}
+: ${virtual_oss_sequencer_command="@CMAKE_INSTALL_PREFIX@/bin/virtual_oss_sequencer"}
+: ${virtual_oss_sequencer_pidfile="@RUNDIR@/virtual_oss_sequencer.pid"}
+
+
+command=${virtual_oss_sequencer_command}
+command_args="-d -p ${virtual_oss_sequencer_pidfile}"
+
+pidfile="${virtual_oss_sequencer_pidfile}"
+
+
+run_rc_command "$1"

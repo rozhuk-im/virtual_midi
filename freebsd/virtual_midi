@@ -1,0 +1,30 @@
+#!/bin/sh
+### Rozhuk Ivan 2025
+### startup script file for virtual_midi
+###
+
+
+# PROVIDE: virtual_midi
+# REQUIRE: DAEMON
+# BEFORE:  LOGIN
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="virtual_midi"
+rcvar=virtual_midi_enable
+
+load_rc_config $name
+
+: ${virtual_midi_enable="NO"}
+: ${virtual_midi_command="@CMAKE_INSTALL_PREFIX@/bin/virtual_midi"}
+: ${virtual_midi_pidfile="@RUNDIR@/virtual_midi.pid"}
+
+
+command=${virtual_midi_command}
+command_args="-d -p ${virtual_midi_pidfile}"
+
+pidfile="${virtual_midi_pidfile}"
+
+
+run_rc_command "$1"
