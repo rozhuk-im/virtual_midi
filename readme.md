@@ -55,6 +55,8 @@ options:
 	-help, -? 				Show help
 	-daemon, -d 				Run as daemon
 	-pid, -p <pid>				PID file name
+	-user, -u <user>			Change uid
+	-group, -g <group>			Change gid
 	-threads, -t <cuse_threads>		CUSE threads count
 	-vdev, -V <virtual_device_name>		New virtual MIDI device base name. Default: midi
 	-odrv, -o <output_driver_name>		Output sound driver name. Default: oss
@@ -70,8 +72,20 @@ options:
 	-help, -? 				Show help
 	-daemon, -d 				Run as daemon
 	-pid, -p <pid>				PID file name
+	-user, -u <user>			Change uid
+	-group, -g <group>			Change gid
 	-threads, -t <cuse_threads>		CUSE threads count
 	-vdev, -V <virtual_device_name>		New virtual MIDI device base name. Default: sequencer
 	-prefix, -P <out_device_name_prefix>	Output devices name prefix. Use multiple times if you need more than 1 prefix. Default: midi, umidi
 ```
+
+
+### Tested with
+ - playmidi (audio/playmidi)
+ - playumidi (audio/playumidi)
+ - dmidiplayer (audio/dmidiplayer)
+ - wine-devel (emulators/wine-devel with OSS) + notation player 5 (win64)
+ - audio/alsa-seq-server - it is ALSA sequencer daemon that proxy MIDI@ALSA to raw midi devices
+ -- aplaymidi (audio/alsa-utils)
+ -- wine-devel (emulators/wine-devel with ALSA) + notation player 5 (win64, win32 does not work)
 

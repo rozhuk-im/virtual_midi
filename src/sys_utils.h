@@ -52,5 +52,8 @@ make_daemon(void);
 int
 write_pid(const char *file_name);
 
+int
+set_user_and_group(uid_t pw_uid, gid_t pw_gid);
+
 
 #endif /* __SYS_UTILS_H__ */

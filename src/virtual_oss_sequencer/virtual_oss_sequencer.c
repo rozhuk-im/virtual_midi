@@ -42,6 +42,8 @@
 #include <pthread.h>
 #include <paths.h> /* _PATH_VARRUN */
 #include <getopt.h>
+#include <pwd.h>
+#include <grp.h>
 
 #include "dev_oss_sequencer.h"
 #include "sys_utils.h"
@@ -65,6 +67,8 @@ static volatile int app_running = 1;
 typedef struct command_line_options_s {
 	int		daemon;
 	const char	*pid;
+	uid_t		pw_uid;		/* user uid */
+	gid_t		pw_gid;		/* user gid */
 	int		threads;
 	const char	*vdev;
 	const char	*prefix[CLO_PREFIX_COUNT_MAX];
@@ -76,6 +80,8 @@ static struct option long_options[] = {
 	{ "help",	no_argument,		NULL,	'?'	},
 	{ "daemon",	no_argument,		NULL,	'd'	},
 	{ "pid",	required_argument,	NULL,	'p'	},
+	{ "user",	required_argument,	NULL,	'u'	},
+	{ "group",	required_argument,	NULL,	'g'	},
 	{ "threads",	required_argument,	NULL,	't'	},
 	{ "vdev",	required_argument,	NULL,	'V'	},
 	{ "prefix",	required_argument,	NULL,	'P'	},
@@ -86,6 +92,8 @@ static const char *long_options_descr[] = {
 	"				Show help",
 	"				Run as daemon",
 	"<pid>				PID file name",
+	"<user>			Change uid",
+	"<group>			Change gid",
 	"<cuse_threads>		CUSE threads count. Default: CPU count x2",
 	"<virtual_device_name>		New virtual MIDI device base name. Default: " VIRTUAL_SEQ_DEF_VDEV,
 	"<out_device_name_prefix>	Output devices name prefix. Use multiple times if you need more than 1 prefix. Default: midi, umidi",
@@ -96,8 +104,11 @@ static const char *long_options_descr[] = {
 static int
 cmd_opts_parse(int argc, char **argv, struct option *opts,
     cmd_opts_p cmd_opts) {
-	int i, ch, opt_idx;
+	int error, i, ch, opt_idx;
 	char opts_str[1024];
+	struct passwd *pwd, pwd_buf;
+	struct group *grp, grp_buf;
+	char tmbuf[4096];
 
 	memset(cmd_opts, 0x00, sizeof(cmd_opts_t));
 	cmd_opts->vdev = VIRTUAL_SEQ_DEF_VDEV;
@@ -145,13 +156,31 @@ restart_opts:
 		case 2: /* pid */
 			cmd_opts->pid = optarg;
 			break;
-		case 3: /* threads */
+		case 3: /* user */
+			error = getpwnam_r(optarg, &pwd_buf, tmbuf, sizeof(tmbuf), &pwd);
+			if (0 != error) {
+				errx(EX_NOUSER,
+				    "option \"-u\" requires valid UID, UID %s not found: %i - %s.",
+				    optarg, error, strerror(error));
+			}
+			cmd_opts->pw_uid = pwd->pw_uid;
+			break;
+		case 4: /* group */
+			error = getgrnam_r(optarg, &grp_buf, tmbuf, sizeof(tmbuf), &grp);
+			if (0 != error) {
+				errx(EX_NOUSER,
+				    "option \"-g\" requires valid GID, GID %s not found: %i - %s.",
+				    optarg, error, strerror(error));
+			}
+			cmd_opts->pw_gid = grp->gr_gid;
+			break;
+		case 5: /* threads */
 			cmd_opts->threads = atoi(optarg);
 			break;
-		case 4: /* vdev */
+		case 6: /* vdev */
 			cmd_opts->vdev = optarg;
 			break;
-		case 5: /* prefix */
+		case 7: /* prefix */
 			if (CLO_PREFIX_COUNT_MAX >= cmd_opts->prefix_count) {
 				fprintf(stderr, "Can not add more prefixies, max count is %i!\n",
 				    CLO_PREFIX_COUNT_MAX);
@@ -205,8 +234,7 @@ main(int argc, char **argv) {
 	cmd_opts_t cmd_opts;
 	struct cuse_dev *seq_dev;
 	pthread_t td;
-	/* 1 sec = 1000000000 nanoseconds. */
-	struct timespec rqts = { .tv_sec = 0, .tv_nsec = 100000000 };
+	struct timespec rqts = { .tv_sec = 3600, .tv_nsec = 0 };
 
 	/* Command line processing. */
 	error = cmd_opts_parse(argc, argv, long_options, &cmd_opts);
@@ -270,6 +298,10 @@ main(int argc, char **argv) {
 	for (size_t i = 0; i < (size_t)cmd_opts.threads; i ++) {
 		pthread_create(&td, NULL, &cuse_worker_proc, NULL);
 	}
+
+	/* Drop rights. */
+	set_user_and_group(cmd_opts.pw_uid, cmd_opts.pw_gid);
+
 	/* Wait for signals. */
 	while (0 != app_running) {
 		nanosleep(&rqts, NULL); /* Ignore early wakeup and errors. */

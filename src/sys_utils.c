@@ -42,6 +42,8 @@
 #include <err.h>
 #include <sysexits.h>
 #include <libgen.h> /* basename */
+#include <pwd.h>
+#include <grp.h>
 
 #include "sys_utils.h"
 
@@ -123,6 +125,55 @@ write_pid(const char *file_name) {
 	}
 	fchmod(fd, (S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH));
 	close(fd);
+
+	return (0);
+}
+
+int
+set_user_and_group(uid_t pw_uid, gid_t pw_gid) {
+	int error;
+	struct passwd *pwd, pwd_buf;
+	char buffer[4096], err_descr[256];
+
+	if (0 == pw_uid || 0 == pw_gid)
+		return (EINVAL);
+
+	error = getpwuid_r(pw_uid, &pwd_buf, buffer, sizeof(buffer), &pwd);
+	if (0 != error) {
+		strerror_r(error, err_descr, sizeof(err_descr));
+		fprintf(stderr, "set_user_and_group: getpwuid_r() error %i: %s\n",
+		    error, err_descr);
+		return (error);
+	}
+
+	if (0 != setgid(pw_gid)) {
+		error = errno;
+		strerror_r(error, err_descr, sizeof(err_descr));
+		fprintf(stderr, "set_user_and_group: setgid() error %i: %s\n",
+		    error, err_descr);
+		return (error);
+	}
+	if (0 != initgroups(pwd->pw_name, pw_gid)) {
+		error = errno;
+		strerror_r(error, err_descr, sizeof(err_descr));
+		fprintf(stderr, "set_user_and_group: initgroups() error %i: %s\n",
+		    error, err_descr);
+		return (error);
+	}
+	if (0 != setgroups(1, &pwd->pw_gid)) {
+		error = errno;
+		strerror_r(error, err_descr, sizeof(err_descr));
+		fprintf(stderr, "set_user_and_group: setgroups() error %i: %s\n",
+		    error, err_descr);
+		return (error);
+	}
+	if (0 != setuid(pw_uid)) {
+		error = errno;
+		strerror_r(error, err_descr, sizeof(err_descr));
+		fprintf(stderr, "set_user_and_group: setuid() error %i: %s\n",
+		    error, err_descr);
+		return (error);
+	}
 
 	return (0);
 }
