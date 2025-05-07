@@ -21,6 +21,11 @@ set(PACKAGE_TARNAME		"${PACKAGE_NAME}-${PACKAGE_VERSION}")
 
 ############################# OPTIONS SECTION ##########################
 
+if (NOT RUNDIR)
+	set(RUNDIR "/var/run")
+endif()
+
+
 ############################# INCLUDE SECTION ##########################
 
 include(CheckIncludeFiles)
